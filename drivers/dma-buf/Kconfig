@@ -44,18 +44,13 @@ config DMABUF_SELFTESTS
 	default n
 	depends on DMA_SHARED_BUFFER
 
-config DMA_BUF_CONTAINER
-	tristate "Dma-buf container support"
-	depends on DMA_SHARED_BUFFER
-	---help---
-	  dma-buf container is a dma-buf that can contain multiple different
-	  dma-buf objects. It is useful when delivering a lot of dma-buf objects
-	  between processes or user and kernel to reduce communication overhead.
-
-
-config DMABUF_TRACE
-	bool "dma-buf trace support"
-	default y
-	depends on DMA_SHARED_BUFFER
+menuconfig DMABUF_HEAPS
+	bool "DMA-BUF Userland Memory Heaps"
+	select DMA_SHARED_BUFFER
+	help
+	  Choose this option to enable the DMA-BUF userland memory heaps.
+	  This options creates per heap chardevs in /dev/dma_heap/ which
+	  allows userspace to allocate dma-bufs that can be shared
+	  between drivers.
 
 endmenu
