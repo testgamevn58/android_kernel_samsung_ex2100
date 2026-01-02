@@ -48,11 +48,20 @@ done
 
 refetch_ksu() {
 
-    rm -rf "$PWD/KernelSU"
+    rm -rf "$PWD/KernelSU-Next"
 
-        echo "Fetching latest RKSU"
+        echo "Fetching latest KernelSu Next"
         git submodule update --init --recursive || {
-            echo "Failed to initialize RKSU submodule!"
+            echo "Failed to initialize KSU Next submodule!"
+            exit 1
+        }
+}
+
+enable_susfs() {
+
+        echo "Applying SuSFS patch to KernelSU Next..."
+        patch -d "$PWD/KernelSU-Next" -p1 < "$PWD/patches/enable-susfs.patch" || {
+            echo "Failed to apply SuSFS patch!"
             exit 1
         }
 }
@@ -396,12 +405,11 @@ MAKEFILE_LINE='obj-$(CONFIG_KSU) += kernelsu/'
 
 if [[ "$KSU_OPTION" == "y" ]]; then
 
-    if ! grep -Fxq "$KSU" "$KCONFIG_FILE"; then
-        sed -i "\|endmenu|i $KSU" "$KCONFIG_FILE"
-    fi
+    fetch_ksu
 
-    git -C KernelSU fetch origin
-    git -C KernelSU checkout -B "$KSU_BRANCH" "origin/$KSU_BRANCH"
+    if [[ "$SUSFS_OPTION" == "y" ]]; then
+    enable_susfs
+    fi
 
     if ! grep -Fxq "$KSU" "$KCONFIG_FILE"; then
         sed -i "\|endmenu|i $KSU" "$KCONFIG_FILE"
