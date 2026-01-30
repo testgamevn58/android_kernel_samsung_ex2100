@@ -46,7 +46,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-refetch_ksu() {
+fetch_ksu() {
 
     rm -rf "$PWD/KernelSU-Next"
 
