@@ -21,7 +21,11 @@
 #include <linux/clk-provider.h>
 #include <linux/console.h>
 #include <linux/dma-buf.h>
+#if IS_ENABLED(CONFIG_DMABUF_SAMSUNG_HEAPS)
+#include <linux/dma-heap.h>
+#else
 #include <linux/ion.h>
+#endif
 #include <uapi/linux/sched/types.h>
 #include <linux/highmem.h>
 #include <linux/memblock.h>
@@ -5020,6 +5024,9 @@ static int decon_fb_alloc_memory(struct decon_device *decon, struct decon_win *w
 	struct dma_buf *buf = NULL;
 	void *vaddr;
 	unsigned int ret;
+#if IS_ENABLED(CONFIG_DMABUF_SAMSUNG_HEAPS)
+	struct dma_heap *dma_heap;
+#endif
 
 	decon_dbg("%s +\n", __func__);
 	dev_info(decon->dev, "allocating memory for display\n");
@@ -5038,11 +5045,26 @@ static int decon_fb_alloc_memory(struct decon_device *decon, struct decon_win *w
 	size = PAGE_ALIGN(size);
 
 	dev_info(decon->dev, "want %u bytes for window[%d]\n", size, win->idx);
+#if IS_ENABLED(CONFIG_DMABUF_SAMSUNG_HEAPS)
+	dma_heap = dma_heap_find("system-uncached");
+	if (!dma_heap) {
+		decon_err("dma_heap_find() failed [%x]\n", dma_heap);
+		return -ENODEV;
+	}
+
+	buf = dma_heap_buffer_alloc(dma_heap, (size_t)size, 0, 0);
+	dma_heap_put(dma_heap);
+	if (IS_ERR(buf)) {
+		decon_err("dma_buf allocation is failed [%x]\n", buf);
+		return PTR_ERR(buf);
+	}
+#else
 	buf = ion_alloc((size_t)size, ION_HEAP_SYSTEM, 0);
 	if (IS_ERR(buf)) {
-		dev_err(decon->dev, "ion_share_dma_buf() failed\n");
+		dev_err(decon->dev, "ion_alloc() failed\n");
 		goto err_share_dma_buf;
 	}
+#endif
 
 	vaddr = dma_buf_vmap(buf);
 	if (IS_ERR_OR_NULL(vaddr)) {
@@ -5098,7 +5120,9 @@ static int decon_fb_alloc_memory(struct decon_device *decon, struct decon_win *w
 
 err_map:
 	dma_buf_put(buf);
+#if !IS_ENABLED(CONFIG_DMABUF_SAMSUNG_HEAPS)
 err_share_dma_buf:
+#endif
 	return -ENOMEM;
 }
 
@@ -5115,6 +5139,9 @@ static int decon_fb_test_alloc_memory(struct decon_device *decon, u32 size)
 	struct dma_buf *buf;
 	void *vaddr;
 	unsigned int ret;
+#if IS_ENABLED(CONFIG_DMABUF_SAMSUNG_HEAPS)
+	struct dma_heap *dma_heap;
+#endif
 
 	decon_dbg("%s +\n", __func__);
 	dev_info(decon->dev, "allocating memory for fb test\n");
@@ -5124,12 +5151,26 @@ static int decon_fb_test_alloc_memory(struct decon_device *decon, u32 size)
 
 	dev_info(decon->dev, "want %u bytes for window[%d]\n", size, win->idx);
 
-	buf = ion_alloc((size_t)size, ION_HEAP_SYSTEM, 0);
-	if (IS_ERR(buf)) {
-		dev_err(decon->dev, "ion_share_dma_buf() failed\n");
-		goto err_share_dma_buf;
+#if IS_ENABLED(CONFIG_DMABUF_SAMSUNG_HEAPS)
+	dma_heap = dma_heap_find("system-uncached");
+	if (!dma_heap) {
+		decon_err("dma_heap_find() failed [%x]\n", dma_heap);
+		return -ENODEV;
 	}
 
+	buf = dma_heap_buffer_alloc(dma_heap, (size_t)size, 0, 0);
+	dma_heap_put(dma_heap);
+	if (IS_ERR(buf)) {
+		decon_err("dma_buf allocation is failed [%x]\n", buf);
+		return PTR_ERR(buf);
+	}
+#else
+	buf = ion_alloc((size_t)size, ION_HEAP_SYSTEM, 0);
+	if (IS_ERR(buf)) {
+		dev_err(decon->dev, "ion_alloc() failed\n");
+		goto err_share_dma_buf;
+	}
+#endif
 	vaddr = dma_buf_vmap(buf);
 	if (IS_ERR_OR_NULL(vaddr)) {
 		dev_err(decon->dev, "dma_buf_vmap() failed\n");
@@ -5172,7 +5213,9 @@ static int decon_fb_test_alloc_memory(struct decon_device *decon, u32 size)
 
 err_map:
 	dma_buf_put(buf);
+#if !IS_ENABLED(CONFIG_DMABUF_SAMSUNG_HEAPS)
 err_share_dma_buf:
+#endif
 	return -ENOMEM;
 }
 #endif
@@ -6286,8 +6329,7 @@ static void exynos_decon_unregister(void)
 }
 late_initcall(exynos_decon_register);
 module_exit(exynos_decon_unregister);
-MODULE_SOFTDEP("pre: cmupmucal clk_exynos exynos-pmu-if pinctrl-samsung-core fb phy-exynos-mipi exynos-pd exynos-pd-dbg samsung-iommu");
-
+MODULE_SOFTDEP("pre: cmupmucal clk_exynos exynos-pmu-if pinctrl-samsung-core fb phy-exynos-mipi exynos-pd exynos-pd-dbg samsung-iommu samsung_dma_heap");
 MODULE_AUTHOR("Jaehoe Yang <jaehoe.yang@samsung.com>");
 MODULE_AUTHOR("Yeongran Shin <yr613.shin@samsung.com>");
 MODULE_AUTHOR("Minho Kim <m8891.kim@samsung.com>");
