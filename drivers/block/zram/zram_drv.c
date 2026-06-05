@@ -3487,6 +3487,8 @@ static ssize_t disksize_store(struct device *dev,
 
 	if (!strncmp(zram->compressor, "lzo-rle", 7))
 		is_lzorle = true;
+	else
+		is_lzorle = false;
 
 	zram->comp = comp;
 	zram->disksize = disksize;
