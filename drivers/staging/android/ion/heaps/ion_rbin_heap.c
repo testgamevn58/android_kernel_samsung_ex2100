@@ -474,6 +474,11 @@ static struct platform_driver ion_rbin_heap_driver = {
 
 int __init ion_rbin_heap_init(void)
 {
+	if (IS_ENABLED(CONFIG_EXPERIMENTAL_DMA_BUF)) {
+		pr_info("CONFIG_EXPERIMENTAL_DMA_BUF is enabled so ION exynos rbin heap can't probe\n");
+		return 0;
+	}
+
 	return platform_driver_register(&ion_rbin_heap_driver);
 }
 

@@ -244,6 +244,11 @@ static int chunk_heap_probe(struct platform_device *pdev)
 	struct chunk_heap *chunk_heap;
 	int ret;
 
+	if (!IS_ENABLED(CONFIG_EXPERIMENTAL_DMA_BUF)) {
+		pr_info("CONFIG_EXPERIMENTAL_DMA_BUF is disabled so chunk dma-heap can't probe\n");
+		return -ENODEV;
+	}
+
 	ret = of_reserved_mem_device_init(&pdev->dev);
 	if (ret || !pdev->dev.cma_area) {
 		dev_err(&pdev->dev, "The CMA reserved area is not assigned (ret %d)\n", ret);
@@ -285,6 +290,10 @@ static struct platform_driver chunk_heap_driver = {
 
 int __init chunk_dma_heap_init(void)
 {
+	if (!IS_ENABLED(CONFIG_EXPERIMENTAL_DMA_BUF)) {
+		pr_info("CONFIG_EXPERIMENTAL_DMA_BUF is disabled so chunk dma-heap driver can't probe\n");
+		return 0;
+	}
 	return platform_driver_register(&chunk_heap_driver);
 }
 

@@ -296,6 +296,11 @@ static int __init ion_system_heap_init(void)
 	struct device *dev;
 	int ret = -ENOMEM;
 
+	if (IS_ENABLED(CONFIG_EXPERIMENTAL_DMA_BUF)) {
+		pr_info("CONFIG_EXPERIMENTAL_DMA_BUF is enabled so ION exynos system heap can't probe\n");
+		return 0;
+	}
+
 	dev = kzalloc(sizeof(*dev), GFP_KERNEL);
 	if (!dev)
 		return ret;

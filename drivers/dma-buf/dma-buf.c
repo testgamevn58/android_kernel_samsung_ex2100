@@ -30,6 +30,7 @@
 #include <uapi/linux/magic.h>
 
 #include "dma-buf-sysfs-stats.h"
+#include "dma-buf-trace.h"
 
 struct dma_buf_list {
 	struct list_head head;

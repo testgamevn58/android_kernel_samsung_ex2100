@@ -243,6 +243,11 @@ static void system_heap_release(struct samsung_dma_buffer *buffer)
 
 static int system_heap_probe(struct platform_device *pdev)
 {
+	if (!IS_ENABLED(CONFIG_EXPERIMENTAL_DMA_BUF)) {
+		pr_info("CONFIG_EXPERIMENTAL_DMA_BUF is disabled so system dma-heap can't probe\n");
+		return -ENODEV;
+	}
+
 	return samsung_heap_add(&pdev->dev, NULL, system_heap_release, &system_heap_ops);
 }
 
@@ -263,6 +268,11 @@ static struct platform_driver system_heap_driver = {
 int __init system_dma_heap_init(void)
 {
 	int i;
+
+	if (!IS_ENABLED(CONFIG_EXPERIMENTAL_DMA_BUF)) {
+		pr_info("CONFIG_EXPERIMENTAL_DMA_BUF is disabled so system dma-heap driver can't probe\n");
+		return 0;
+	}
 
 	for (i = 0; i < NUM_ORDERS; i++) {
 		pools[i] = dmabuf_page_pool_create(order_flags[i], orders[i]);

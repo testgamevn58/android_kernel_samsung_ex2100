@@ -780,6 +780,10 @@ static int dsp_hw_o1_memory_probe(struct dsp_system *sys)
 	struct dsp_reserved_mem *rmem;
 
 	dsp_enter();
+	if (IS_ENABLED(CONFIG_EXPERIMENTAL_DMA_BUF)) {
+		dsp_info("FK_FEATURE_ENABLE_DMA_BUF is enabled so DSP O1 memory can't probe\n");
+		return -ENODEV;
+	}
 	mem = &sys->memory;
 	mem->dev = sys->dev;
 	mem->priv_mem_count = DSP_O1_PRIV_MEM_COUNT;

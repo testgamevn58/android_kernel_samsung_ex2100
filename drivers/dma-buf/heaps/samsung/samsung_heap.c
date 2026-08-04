@@ -462,6 +462,11 @@ static int __init samsung_dma_heap_init(void)
 {
 	int ret;
 
+	if (!IS_ENABLED(CONFIG_EXPERIMENTAL_DMA_BUF)) {
+		pr_info("CONFIG_EXPERIMENTAL_DMA_BUF is disabled so Samsung dma-heap module can't probe\n");
+		return 0;
+	}
+
 	ret = chunk_dma_heap_init();
 	if (ret)
 		return ret;

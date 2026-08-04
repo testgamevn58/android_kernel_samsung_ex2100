@@ -465,6 +465,11 @@ static int __init exynos_hpa_init(void)
 {
 	int ret, i = 0;
 
+	if (IS_ENABLED(CONFIG_EXPERIMENTAL_DMA_BUF)) {
+		pr_info("CONFIG_EXPERIMENTAL_DMA_BUF is enabled so ION HPA heap can't probe\n");
+		return 0;
+	}
+
 	ret = hpa_secure_iova_pool_create();
 	if (ret)
 		return ret;

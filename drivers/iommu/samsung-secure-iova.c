@@ -64,6 +64,11 @@ static int __init samsung_secure_iova_init(void)
 	phys_addr_t base = SECURE_DMA_BASE, size = SECURE_DMA_SIZE;
 	int ret;
 
+	if (!IS_ENABLED(CONFIG_EXPERIMENTAL_DMA_BUF)) {
+		pr_info("CONFIG_EXPERIMENTAL_DMA_BUF is disabled so Secure IOVA can't probe\n");
+		return 0;
+	}
+
 	secure_iova_pool = gen_pool_create(PAGE_SHIFT, -1);
 	if (!secure_iova_pool) {
 		pr_err("failed to create Secure IOVA pool\n");

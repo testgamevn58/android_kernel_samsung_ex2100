@@ -535,6 +535,11 @@ static int ion_device_create(void)
 	struct ion_device *idev;
 	int ret;
 
+	if (IS_ENABLED(CONFIG_EXPERIMENTAL_DMA_BUF)) {
+		pr_info("CONFIG_EXPERIMENTAL_DMA_BUF is enabled so ION can't probe\n");
+		return 0;
+	}
+
 	idev = kzalloc(sizeof(*idev), GFP_KERNEL);
 	if (!idev)
 		return -ENOMEM;

@@ -17,7 +17,8 @@
 
 #if IS_ENABLED(CONFIG_DMABUF_SAMSUNG_HEAPS)
 #include <linux/dma-heap.h>
-#else
+#endif
+#if IS_ENABLED(CONFIG_ION)
 #include <linux/ion_exynos.h>
 #include <linux/ion.h>
 #endif

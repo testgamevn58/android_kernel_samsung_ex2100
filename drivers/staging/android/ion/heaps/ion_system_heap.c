@@ -290,7 +290,14 @@ static struct ion_system_heap system_heap = {
 
 static int __init ion_system_heap_init(void)
 {
-	int ret = ion_system_heap_create_pools(system_heap.pools);
+	int ret;
+
+	if (IS_ENABLED(CONFIG_EXPERIMENTAL_DMA_BUF)) {
+		pr_info("CONFIG_EXPERIMENTAL_DMA_BUF is enabled so ION system heap can't probe\n");
+		return 0;
+	}
+
+	ret = ion_system_heap_create_pools(system_heap.pools);
 	if (ret)
 		return ret;
 

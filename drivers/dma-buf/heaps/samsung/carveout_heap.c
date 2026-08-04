@@ -132,6 +132,11 @@ int carveout_heap_probe(struct platform_device *pdev)
 	struct device_node *rmem_np;
 	int ret;
 
+	if (!IS_ENABLED(CONFIG_EXPERIMENTAL_DMA_BUF)) {
+		pr_info("CONFIG_EXPERIMENTAL_DMA_BUF is disabled so carveout dma-heap can't probe\n");
+		return -ENODEV;
+	}
+
 	rmem_np = of_parse_phandle(pdev->dev.of_node, "memory-region", 0);
 	rmem = of_reserved_mem_lookup(rmem_np);
 	if (!rmem) {
@@ -178,6 +183,10 @@ static struct platform_driver carveout_heap_driver = {
 
 int __init carveout_dma_heap_init(void)
 {
+	if (!IS_ENABLED(CONFIG_EXPERIMENTAL_DMA_BUF)) {
+		pr_info("CONFIG_EXPERIMENTAL_DMA_BUF is disabled so carveout dma-heap can't probe\n");
+		return 0;
+	}
 	return platform_driver_register(&carveout_heap_driver);
 }
 

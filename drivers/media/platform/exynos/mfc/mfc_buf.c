@@ -735,14 +735,16 @@ int mfc_alloc_firmware(struct mfc_core *core)
 	}
 
 #if IS_ENABLED(CONFIG_DMABUF_SAMSUNG_HEAPS) && IS_ENABLED(CONFIG_SAMSUNG_SECURE_IOVA)
-	/* allocate Secure-DVA region */
-	secure_daddr = secure_iova_alloc(core->drm_fw_buf.size, EXYNOS_SECBUF_PROT_ALIGNMENTS);
-	if (!secure_daddr) {
-		mfc_core_err("DRM F/W buffer can not get IOVA!\n");
-		goto err_reserve_iova_secure;
-	}
+	if (IS_ENABLED(CONFIG_EXPERIMENTAL_DMA_BUF)) {
+		/* allocate Secure-DVA region */
+		secure_daddr = secure_iova_alloc(core->drm_fw_buf.size, EXYNOS_SECBUF_PROT_ALIGNMENTS);
+		if (!secure_daddr) {
+			mfc_core_err("DRM F/W buffer can not get IOVA!\n");
+			goto err_reserve_iova_secure;
+		}
 
-	core->drm_fw_buf.daddr = (dma_addr_t)secure_daddr;
+		core->drm_fw_buf.daddr = (dma_addr_t)secure_daddr;
+	}
 #endif
 
 	mfc_core_change_fw_state(core, 1, MFC_FW_ALLOC, 1);
@@ -888,9 +890,11 @@ int mfc_release_firmware(struct mfc_core *core)
 #if IS_ENABLED(CONFIG_EXYNOS_CONTENT_PATH_PROTECTION)
 	/* free Secure-DVA region */
 #if IS_ENABLED(CONFIG_DMABUF_SAMSUNG_HEAPS) && IS_ENABLED(CONFIG_SAMSUNG_SECURE_IOVA)
-	if (core->drm_fw_buf.daddr)
-		secure_iova_free(core->drm_fw_buf.daddr, core->drm_fw_buf.size);
-	core->drm_fw_buf.daddr = 0;
+	if (IS_ENABLED(CONFIG_EXPERIMENTAL_DMA_BUF)) {
+		if (core->drm_fw_buf.daddr)
+			secure_iova_free(core->drm_fw_buf.daddr, core->drm_fw_buf.size);
+		core->drm_fw_buf.daddr = 0;
+	}
 #endif
 	mfc_mem_special_buf_free(core->dev, &core->drm_fw_buf);
 #endif

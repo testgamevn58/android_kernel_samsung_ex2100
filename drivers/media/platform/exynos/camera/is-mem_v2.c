@@ -32,7 +32,8 @@
 #include <linux/dma-buf-container.h>
 #if IS_ENABLED(CONFIG_DMABUF_SAMSUNG_HEAPS)
 #include <linux/dma-heap.h>
-#else
+#endif
+#if IS_ENABLED(CONFIG_ION)
 #include <linux/ion.h>
 #endif
 #include <linux/kmemleak.h>
@@ -1593,12 +1594,27 @@ int is_mem_init(struct is_mem *mem, struct platform_device *pdev)
 		mem->is_vb2_buf_ops = &is_vb2_buf_ops_dma_sg;
 	}
 
-	if (IS_ENABLED(CONFIG_DMABUF_SAMSUNG_HEAPS)) {
+	if (IS_ENABLED(CONFIG_DMABUF_SAMSUNG_HEAPS) && IS_ENABLED(CONFIG_ION)) {
+		/* both allocators built: runtime-select */
+		if (IS_ENABLED(CONFIG_EXPERIMENTAL_DMA_BUF)) {
+			mem->is_mem_ops = &pablo_mem_ops_dmabuf_heap;
+			mem->priv = CALL_PTR_MEMOP(mem, init, pdev);
+			if (IS_ERR(mem->priv))
+				return PTR_ERR(mem->priv);
+		} else {
+			mem->is_mem_ops = &is_mem_ops_ion;
+			mem->priv = CALL_PTR_MEMOP(mem, init, pdev);
+			if (IS_ERR(mem->priv))
+				return PTR_ERR(mem->priv);
+		}
+	} else if (IS_ENABLED(CONFIG_DMABUF_SAMSUNG_HEAPS)) {
+		/* DMA-BUF only */
 		mem->is_mem_ops = &pablo_mem_ops_dmabuf_heap;
 		mem->priv = CALL_PTR_MEMOP(mem, init, pdev);
 		if (IS_ERR(mem->priv))
 			return PTR_ERR(mem->priv);
 	} else if (IS_ENABLED(CONFIG_ION)) {
+		/* ION only */
 		mem->is_mem_ops = &is_mem_ops_ion;
 		mem->priv = CALL_PTR_MEMOP(mem, init, pdev);
 		if (IS_ERR(mem->priv))

@@ -969,6 +969,11 @@ static int __init hpa_dma_heap_init(void)
 	struct dma_heap *dma_heap;
 	int ret, i = 0;
 
+	if (!IS_ENABLED(CONFIG_EXPERIMENTAL_DMA_BUF)) {
+		pr_info("CONFIG_EXPERIMENTAL_DMA_BUF is disabled so HPA dma-heap can't probe\n");
+		return 0;
+	}
+
 	ret = hpa_secure_iova_pool_init();
 	if (ret)
 		return ret;
